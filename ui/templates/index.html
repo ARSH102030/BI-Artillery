@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BI Artillery - Bulk Power BI Downloader/Uploader</title>
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <!-- Title Bar -->
+    <div class="title-bar">
+        <div class="title-left">
+            <span class="crosshair-icon">⨁</span>
+            <span>BI Artillery - Bulk Power BI Downloader/Uploader - v2.1.0</span>
+        </div>
+        <div class="title-right">
+            <span class="window-control">-</span>
+            <span class="window-control">□</span>
+            <span class="window-control close">×</span>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="tools-left">
+            <button class="btn btn-blue" id="btn-download" disabled>⤓ Download Selected</button>
+            <button class="btn btn-red" id="btn-upload" disabled>⤒ Upload to Workspace</button>
+            <div class="separator"></div>
+            <button class="btn-text" id="btn-select-all">☑ Select All</button>
+            <button class="btn-text" id="btn-clear-all">⦸ Clear</button>
+            <button class="btn-text" id="btn-refresh">↻ Refresh</button>
+        </div>
+        <div class="tools-right">
+            <div id="auth-pill" class="auth-pill" style="display:none;">
+                <span class="status-dot"></span>
+                <span id="user-display">Not Authenticated</span>
+            </div>
+            <button class="btn btn-blue" id="btn-auth">Sign In</button>
+            <button class="btn-text text-red" id="btn-signout" style="display:none;">Sign Out</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">FABRIC WORKSPACES</div>
+            <div class="search-box">
+                <input type="text" placeholder="⌕ Filter workspaces...">
+            </div>
+            <ul class="workspace-list" id="workspace-list">
+                <!-- Populated via JS -->
+            </ul>
+        </div>
+
+        <!-- Center Area (Grid) -->
+        <div class="table-area">
+            <div class="table-toolbar">
+                <div class="breadcrumbs" id="breadcrumbs">
+                    <span class="fabric-icon">🗂</span> Fabric <span class="chevron">></span> <span id="current-ws-lbl">Select a Workspace</span>
+                </div>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th class="col-check"><input type="checkbox" id="check-all"></th>
+                        <th>Name ↑</th>
+                        <th>Type</th>
+                        <th class="text-right">Size</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr><td colspan="4" class="empty-state">Authenticate to view workspaces</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Right Pane (Details) -->
+        <div class="details-pane" id="details-pane">
+            <div class="details-header">
+                <h3>Details</h3>
+                <span class="close-details">×</span>
+            </div>
+            <div class="details-content" id="details-content">
+                <p>Select an item to view details.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-left">
+            <span>Ready</span>
+            <span class="separator">|</span>
+            <span id="status-ws">Workspace: None</span>
+        </div>
+        <div class="status-right">
+            <span class="creator">Power BI App</span>
+            <span id="status-totals">0 Workspaces - 0 items</span>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

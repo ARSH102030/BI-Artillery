@@ -1,0 +1,11 @@
+build/
+dist/
+__pycache__/
+*.pyc
+logs/
+downloads/
+config.json
+*.spec
+.env
+venv/
+env/

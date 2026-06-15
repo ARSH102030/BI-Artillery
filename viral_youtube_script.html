@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viral YouTube Script: BI Artillery</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0b0c10; color: #c5c6c7; line-height: 1.6; padding: 20px; }
+        h1 { color: #00f3ff; text-shadow: 0 0 10px #00f3ff; border-bottom: 2px solid #1f2833; padding-bottom: 10px; }
+        h2 { color: #45ff45; text-shadow: 0 0 5px #45ff45; margin-top: 30px; }
+        .scene { background: #1f2833; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #00f3ff; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .timestamp { font-weight: bold; color: #ff0055; margin-bottom: 10px; display: inline-block; background: rgba(255,0,85,0.1); padding: 3px 8px; border-radius: 4px; }
+        .visual { color: #00f3ff; font-weight: bold; margin-bottom: 5px; }
+        .audio { color: #fff; margin-bottom: 5px; font-style: italic; }
+        .visual-box { background: rgba(0, 243, 255, 0.05); border: 1px dashed #00f3ff; padding: 10px; border-radius: 4px; margin-bottom: 10px; }
+        .audio-box { background: rgba(255, 255, 255, 0.05); border: 1px dashed #ccc; border-radius: 4px; padding: 10px; }
+        .warning { background: rgba(255, 0, 85, 0.1); border-left: 5px solid #ff0055; padding: 15px; margin-top: 30px; border-radius: 4px;}
+        .warning strong { color: #ff0055; }
+    </style>
+</head>
+<body>
+
+    <h1>🚀 YouTube Video Script: Stop Downloading Power BI Reports Manually (BI Artillery)</h1>
+    <p><strong>Target Video Length:</strong> 8 - 10 Minutes</p>
+    <p><strong>Video Vibe:</strong> Energetic, Pain-Relieving, Professional but Tech-Savvy</p>
+    <p><strong>Proposed Titles:</strong></p>
+    <ul>
+        <li>I Built a Tool to STOP Manual Power BI Downloads FOREVER (BI Artillery)</li>
+        <li>How to Bulk Download & Upload Power BI Reports in 1 Click</li>
+        <li>This App Saves Me 10 Hours a Week in Power BI</li>
+    </ul>
+
+    <div class="warning">
+        <strong>⚠️ WHAT NOT TO SHOW (SECURITY):</strong>
+        <br>1. Blur out your Tenant ID if you show the Python code.
+        <br>2. Do not show actual client/company data. Use a dummy workspace (like PROD_BI that we used) with generic testing reports.
+        <br>3. Fast-forward or blur the Microsoft Authentication login page if it shows your personal credentials or tokens.
+    </div>
+
+    <h2>🎬 Scene by Scene Script</h2>
+
+    <!-- Hook -->
+    <div class="scene">
+        <div class="timestamp">0:00 - 1:00 | THE HOOK & THE PAIN</div>
+        
+        <div class="visual-box">
+            <div class="visual">👀 [VISUAL]:</div>
+            Show a fast-forwarded, frustrating timelapse of you inside the native Power BI web service. Clicking the 3 dots -> Download this file -> Continue -> Waiting -> Repeating it 10 times. Put a big black and white filter over it with a giant red "x" or a counter showing time wasted.
+        </div>
+        
+        <div class="audio-box">
+            <div class="audio">🎤 [AUDIO]:</div>
+            "We have all been here. You have to back up a workspace, migrate to a new tenant, or just do a mass update to 50 different Power BI reports. And Microsoft forces you to click... download... wait... click... download... wait... one by one by one. It is mind-numbing, and it kills your productivity."
+        </div>
+
+        <div class="visual-box">
+            <div class="visual">👀 [VISUAL]:</div>
+            Cut back to full color. You on camera looking directly at the viewer with a smile. Then, quick b-roll of the BI Artillery app popping open on your desktop with its sleek 3D neon UI.
+        </div>
+
+        <div class="audio-box">
+            <div class="audio">🎤 [AUDIO]:</div>
+            "So, I decided I was never doing that again. I built a standalone Windows desktop app that lets you bulk download, bulk upload, and automatically rebind entire Power BI workspaces in literally one single click. Today, I'm going to show you exactly how it works, and how it's going to save you hours of your life."
+        </div>
+    </div>
+
+    <!-- Intro & UI Tour -->
+    <div class="scene">
+        <div class="timestamp">1:00 - 2:30 | INTRODUCING BI ARTILLERY</div>
+        
+        <div class="visual-box">
+            <div class="visual">👀 [VISUAL]:</div>
+            Screen recording of your desktop. You double-click the "BI Artillery" shortcut. The app opens instantly. Zoom into the clean "Dark Mode Neon" UI. Point out the Fabric structure. Click "Sign In" and show the clean status bar updating with your email.
+        </div>
+        
+        <div class="audio-box">
+            <div class="audio">🎤 [AUDIO]:</div>
+            "Welcome to BI Artillery. I designed this to be completely self-contained. When you boot it up, you get a clean, stealthy UI that directly hooks into the Microsoft Fabric API. Once I authenticate, look at the left panel—it instantly pulls my entire Fabric Workspace tree."
+        </div>
+
+        <div class="visual-box">
+            <div class="visual">👀 [VISUAL]:</div>
+            Click on the 'PROD_BI' workspace. Show the folders loading seamlessly. Explain how Semantic Models have a different icon/badge than Reports.
+        </div>
+
+        <div class="audio-box">
+            <div class="audio">🎤 [AUDIO]:</div>
+            "Notice how it beautifully maps native Fabric folders? And look at the center grid: It automatically differentiates your standard Power BI Reports from your underlying Semantic Models. No more guessing what is what. But let's get to the good stuff: Bulk Downloading."
+        </div>
+    </div>
+
+    <!-- Demo: Bulk Download -->
+    <div class="scene">
+        <div class="timestamp">2:30 - 5:00 | BULK DOWNLOADING MAGIC</div>
+        
+        <div class="visual-box">
+            <div class="visual">👀 [VISUAL]:</div>
+            Click the "Select All" button at the top. Everything highlights. Click "Download Selected". The native Windows folder prompt opens. Select an empty folder on your desktop called "Backup Demo".
+        </div>
+        
+        <div class="audio-box">
+            <div class="audio">🎤 [AUDIO]:</div>
+            "Let's say I need to back up this entire folder. I just hit 'Select All', then 'Download Selected'. Choose my backup folder... and boom."
+        </div>
+
+        <div class="visual-box">
+            <div class="visual">👀 [VISUAL]:</div>
+            Show the new Neon Progress Spinner pulsing. Cut to the Summary Modal showing all the green "Success" messages. Open the actual Windows Folder side-by-side with the app. Show the .pbix files AND the cleanly extracted Semantic Model `.Dataset` folders!
+        </div>
+
+        <div class="audio-box">
+            <div class="audio">🎤 [AUDIO]:</div>
+            "Wait for the neon spinner, and done. The summary report gives us a detailed breakdown. Every PBIX is pulled down perfectly. But here is the absolute best part: Power BI's API normally makes it painfully hard to export Semantic Models. BI Artillery circumvents this by packaging your Semantic Models natively into PBIP dataset folders. It's completely automated."
+        </div>
+    </div>
+
+    <!-- Demo: Bulk Upload & Rebind -->
+    <div class="scene">
+        <div class="timestamp">5:00 - 8:00 | THE KILLER FEATURE: BULK UPLOAD + REBIND</div>
+        
+        <div class="visual-box">
+            <div class="visual">👀 [VISUAL]:</div>
+            Hit "Clear All" in the app. Click "Upload To Workspace". The file picker opens. Shift-select 3-4 PBIX files on your computer. 
+        </div>
+        
+        <div class="audio-box">
+            <div class="audio">🎤 [AUDIO]:</div>
+            "Downloading is great, but Uploading is where the real pain is. Especially if you have a golden Semantic Model and 15 reports attached to it. If you re-upload those reports manually, you have to manually rebind every... single... one."
+        </div>
+
+        <div class="visual-box">
+            <div class="visual">👀 [VISUAL]:</div>
+            Show the prompt window that asks: "Enter Target Dataset ID to rebind". You paste a Dataset ID into the box. Hit enter. Show the progress spinner again. Zoom in heavily on the summary screen showing "Uploaded & Rebound" in green. 
+        </div>
+
+        <div class="audio-box">
+            <div class="audio">🎤 [AUDIO]:</div>
+            "With BI Artillery, I just click Upload, highlight all the PBIX files at once, and the app asks me if I want to rebind them to a specific dataset ID. I paste my dataset ID here. In the background, the app pushes the files, overwrites old versions, AND patches the dataset binds. Dozens of manual clicks reduced to literally one copy-paste."
+        </div>
+    </div>
+
+    <!-- Outro & CTA -->
+    <div class="scene">
+        <div class="timestamp">8:00 - End | WRAP UP & CALL TO ACTION</div>
+        
+        <div class="visual-box">
+            <div class="visual">👀 [VISUAL]:</div>
+            You back on camera. Then transition to an end-screen showing your logo and social links.
+        </div>
+        
+        <div class="audio-box">
+            <div class="audio">🎤 [AUDIO]:</div>
+            "This tool has fundamentally changed how my team manages Fabric Workspaces. If you manage enterprise Power BI environments, I highly recommend building workflow automations like this. If you want to see a deep dive into the code behind this, or want me to open-source the project, let me know in the comments down below. Drop a like if this blew your mind, and make sure to subscribe for more top-tier BI engineering content. See you in the next one."
+        </div>
+    </div>
+
+</body>
+</html>
