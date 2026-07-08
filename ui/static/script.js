@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
         detailsPane.style.display = 'flex';
         let rows = summaryArray.map(s => `
             <tr>
-                <td style="padding:8px 5px; border-bottom:1px solid #1f2833; color:${s.status === 'Success' ? '#45ff45' : '#ff0055'};">${s.status}</td>
+                <td style="padding:8px 5px; border-bottom:1px solid #1f2833; color:${s.status === 'Success' ? '#45ff45' : (s.status === 'Partial' ? '#ffb900' : '#ff0055')};">${s.status}</td>
                 <td style="padding:8px 5px; border-bottom:1px solid #1f2833; color:#c5c6c7;">${s.name} <br><span style="font-size:10px; color:#00f3ff;">${s.type ? s.type : ''}</span></td>
                 <td style="padding:8px 5px; border-bottom:1px solid #1f2833; color:#c5c6c7; font-size:11px;">${s.reason || '-'}</td>
             </tr>
@@ -365,92 +365,208 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // Download Action
+    // ---------- Progress overlay helpers ----------
+    const progressOverlay = document.getElementById('progress-overlay');
+    const progressTitle = document.getElementById('progress-title');
+    const progressFill = document.getElementById('progress-fill');
+    const progressCount = document.getElementById('progress-count');
+    const progressPercent = document.getElementById('progress-percent');
+    const progressCurrent = document.getElementById('progress-current');
+    const progressLog = document.getElementById('progress-log');
+    const progressDone = document.getElementById('progress-done');
+
+    function openProgress(title, mode, total) {
+        progressTitle.textContent = title;
+        progressFill.style.width = '0%';
+        progressFill.className = 'progress-fill' + (mode === 'upload' ? ' upload' : '');
+        progressCount.textContent = `0 / ${total}`;
+        progressPercent.textContent = '0%';
+        progressCurrent.textContent = 'Starting…';
+        progressLog.innerHTML = '';
+        progressDone.style.display = 'none';
+        progressOverlay.style.display = 'flex';
+    }
+
+    function updateProgress(done, total, currentName) {
+        const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+        progressFill.style.width = pct + '%';
+        progressCount.textContent = `${done} / ${total}`;
+        progressPercent.textContent = pct + '%';
+        if (currentName) progressCurrent.textContent = currentName;
+    }
+
+    function appendProgressLog(result) {
+        const li = document.createElement('li');
+        const icon = result.status === 'Success' ? '✓' : (result.status === 'Partial' ? '◐' : '✕');
+        li.innerHTML = `<span class="plog-status plog-${result.status}">${icon} ${result.status}</span>
+                        <span><strong>${result.name}</strong><br><span style="color:#8a8886;">${result.reason || ''}</span></span>`;
+        progressLog.appendChild(li);
+        progressLog.scrollTop = progressLog.scrollHeight;
+    }
+
+    progressDone.addEventListener('click', () => {
+        progressOverlay.style.display = 'none';
+        showSummaryModal(progressDone.dataset.kind || 'Operation', window._lastSummary || []);
+    });
+
+    // ---------- Download Action (real progress bar) ----------
     btnDownload.addEventListener('click', async () => {
         const checked = document.querySelectorAll('.report-chk:checked');
         if (checked.length === 0 || !currentWorkspaceId) return;
-        
-        // 1. Ask for directory
+
         const folderRes = await fetch('/api/select_folder');
         const folderData = await folderRes.json();
         const downloadFolder = folderData.folder;
-        
-        if (!downloadFolder) return; 
+        if (!downloadFolder) return;
 
-        showProgressModal("Downloading", "Please wait while items are being downloaded...");
+        const items = Array.from(checked).map(c => ({ id: c.value, name: c.dataset.name, type: c.dataset.type }));
+        const summary = [];
+
+        openProgress('⤓ Downloading Reports', 'download', items.length);
         btnDownload.disabled = true;
 
-        const reportsToDownload = Array.from(checked).map(c => ({ 
-            id: c.value, 
-            name: c.dataset.name,
-            type: c.dataset.type
-        }));
-        
-        try {
-            const res = await fetch('/api/download', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    workspace_id: currentWorkspaceId, 
-                    reports: reportsToDownload,
-                    download_dir: downloadFolder
-                })
-            });
-            const data = await res.json();
-            
-            if (data.status === 'success' && data.summary) {
-                showSummaryModal("Download", data.summary);
-            } else {
-                alert(data.message);
-                detailsPane.style.display = 'none';
+        for (let i = 0; i < items.length; i++) {
+            updateProgress(i, items.length, `Downloading: ${items[i].name}`);
+            try {
+                const res = await fetch('/api/download_one', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ workspace_id: currentWorkspaceId, item: items[i], download_dir: downloadFolder })
+                });
+                const data = await res.json();
+                const result = data.result || { name: items[i].name, type: items[i].type, status: 'Failed', reason: data.message || 'Unknown error' };
+                summary.push(result);
+                appendProgressLog(result);
+            } catch (e) {
+                const result = { name: items[i].name, type: items[i].type, status: 'Failed', reason: 'Connection error: ' + e };
+                summary.push(result);
+                appendProgressLog(result);
             }
-        } catch (e) {
-            alert("Error downloading: " + e);
-            detailsPane.style.display = 'none';
-        } finally {
-            checkSelection(); 
+            updateProgress(i + 1, items.length);
         }
+
+        progressCurrent.textContent = 'All downloads complete.';
+        window._lastSummary = summary;
+        progressDone.dataset.kind = 'Download';
+        progressDone.style.display = 'block';
+        checkSelection();
     });
 
-    // Upload Action Mapped
+    // ---------- Upload flow (modal + real progress bar) ----------
+    const uploadModal = document.getElementById('upload-modal');
+    const uploadWsName = document.getElementById('upload-ws-name');
+    const uploadFolderSelect = document.getElementById('upload-folder-select');
+    const uploadDatasetSelect = document.getElementById('upload-dataset-select');
+    const uploadFileList = document.getElementById('upload-file-list');
+    const uploadFileCount = document.getElementById('upload-file-count');
+    const btnPickFiles = document.getElementById('btn-pick-files');
+    const uploadStart = document.getElementById('upload-start');
+    let selectedUploadFiles = [];
+
+    function closeUploadModal() { uploadModal.style.display = 'none'; }
+    document.getElementById('upload-modal-close').addEventListener('click', closeUploadModal);
+    document.getElementById('upload-cancel').addEventListener('click', closeUploadModal);
+
     btnUpload.addEventListener('click', async () => {
-        if (!currentWorkspaceId) return;
-        
-        // 1. Ask for files
+        if (!currentWorkspaceId) { alert('Please select a workspace first.'); return; }
+
+        // Reset modal state
+        uploadWsName.value = currentWsLbl.textContent;
+        selectedUploadFiles = [];
+        uploadFileList.innerHTML = '';
+        uploadFileCount.textContent = 'No files selected';
+        uploadStart.disabled = true;
+
+        // Populate folder dropdown from loaded workspace folders
+        uploadFolderSelect.innerHTML = '<option value="">📁 Workspace Root (no subfolder)</option>';
+        (allWorkspaceData.folders || []).forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f.id;
+            opt.textContent = '📂 ' + f.displayName;
+            uploadFolderSelect.appendChild(opt);
+        });
+
+        // Populate dataset dropdown (fetch semantic models/datasets)
+        uploadDatasetSelect.innerHTML = '<option value="">🔗 Keep dataset packaged inside PBIX (no rebind)</option>';
+        try {
+            const dsRes = await fetch(`/api/datasets/${currentWorkspaceId}`);
+            const dsData = await dsRes.json();
+            if (dsData.status === 'success') {
+                (dsData.datasets || []).forEach(ds => {
+                    const opt = document.createElement('option');
+                    opt.value = ds.id;
+                    opt.textContent = '🗄️ ' + (ds.name || ds.displayName || ds.id);
+                    uploadDatasetSelect.appendChild(opt);
+                });
+            }
+        } catch (e) { console.warn('Could not load datasets', e); }
+
+        uploadModal.style.display = 'flex';
+    });
+
+    btnPickFiles.addEventListener('click', async () => {
         const fileRes = await fetch('/api/select_files');
         const fileData = await fileRes.json();
-        const uploadFiles = fileData.files;
-        
-        if (!uploadFiles || uploadFiles.length === 0) return;
+        const files = fileData.files || [];
+        if (files.length === 0) return;
 
-        const targetDataset = prompt("Enter Target Dataset ID to rebind (or leave blank for standard upload):");
+        selectedUploadFiles = files;
+        uploadFileList.innerHTML = '';
+        files.forEach(fp => {
+            const name = fp.split(/[\\/]/).pop();
+            const li = document.createElement('li');
+            li.innerHTML = `📊 ${name}`;
+            uploadFileList.appendChild(li);
+        });
+        uploadFileCount.textContent = `${files.length} file(s) selected`;
+        uploadStart.disabled = false;
+    });
 
-        showProgressModal("Uploading", "Uploading and rebinding items...");
-        btnUpload.disabled = true;
-        
-        try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    workspace_id: currentWorkspaceId, 
-                    local_files: uploadFiles,
-                    target_dataset_id: targetDataset || null
-                })
-            });
-            const data = await res.json();
-            
-            if (data.status === 'success' && data.summary) {
-                showSummaryModal("Upload", data.summary);
-            } else {
-                alert(data.message);
-                detailsPane.style.display = 'none';
+    uploadStart.addEventListener('click', async () => {
+        if (selectedUploadFiles.length === 0) return;
+        const targetDataset = uploadDatasetSelect.value || null;
+        const targetFolder = uploadFolderSelect.value || null;
+
+        closeUploadModal();
+        openProgress('⤒ Uploading Reports', 'upload', selectedUploadFiles.length);
+
+        const summary = [];
+        for (let i = 0; i < selectedUploadFiles.length; i++) {
+            const fp = selectedUploadFiles[i];
+            const name = fp.split(/[\\/]/).pop();
+            updateProgress(i, selectedUploadFiles.length, `Uploading: ${name}`);
+            try {
+                const res = await fetch('/api/upload_one', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workspace_id: currentWorkspaceId,
+                        file_path: fp,
+                        target_dataset_id: targetDataset,
+                        target_folder_id: targetFolder
+                    })
+                });
+                const data = await res.json();
+                const result = data.result || { name: name, type: 'PBIX', status: 'Failed', reason: data.message || 'Unknown error' };
+                summary.push(result);
+                appendProgressLog(result);
+            } catch (e) {
+                const result = { name: name, type: 'PBIX', status: 'Failed', reason: 'Connection error: ' + e };
+                summary.push(result);
+                appendProgressLog(result);
             }
-        } catch (e) {
-            alert("Error uploading: " + e);
-            detailsPane.style.display = 'none';
-        } finally {
-            btnUpload.disabled = false;
+            updateProgress(i + 1, selectedUploadFiles.length);
+        }
+
+        progressCurrent.textContent = 'All uploads complete.';
+        window._lastSummary = summary;
+        progressDone.dataset.kind = 'Upload';
+        progressDone.style.display = 'block';
+
+        // Refresh workspace view to reveal newly uploaded reports
+        if (currentWorkspaceId) {
+            const activeLi = document.querySelector('.workspace-list li.active');
+            selectWorkspace(currentWorkspaceId, currentWsLbl.textContent, activeLi);
         }
     });
 });

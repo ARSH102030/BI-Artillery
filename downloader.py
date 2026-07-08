@@ -9,11 +9,21 @@ def download_pbix(client: FabricClient, workspace_id, report_id, report_name, sa
         file_path = os.path.join(save_dir, f"{report_name}.pbix")
         with open(file_path, 'wb') as f:
             f.write(content)
+        size_kb = round(len(content) / 1024, 1)
         logger.info(f"Downloaded PBIX: {file_path}")
-        return True, ""
+        return True, f"PBIX binary exported successfully ({size_kb} KB) \u2192 saved as '{report_name}.pbix'."
     except Exception as e:
+        err = str(e)
+        if "401" in err or "403" in err:
+            reason = "Access denied when exporting PBIX. Your account lacks 'Build' or 'Member' permission on this report/workspace."
+        elif "404" in err:
+            reason = "Report not found. It may have been deleted or is a Semantic Model without a downloadable PBIX."
+        elif "PowerBINotAuthorizedException" in err or "is not supported" in err.lower():
+            reason = "PBIX export is not supported for this item (e.g. reports built on live-connected or DirectQuery models hosted elsewhere)."
+        else:
+            reason = f"PBIX export failed: {err}"
         logger.error(f"Failed to download PBIX for report '{report_name}': {e}")
-        return False, f"PBIX failure: {str(e)}"
+        return False, reason
 
 def download_pbir(client: FabricClient, workspace_id, item_id, report_name, save_dir, item_type="Report"):
     try:
@@ -38,6 +48,7 @@ def download_pbir(client: FabricClient, workspace_id, item_id, report_name, save
         pbir_dir = os.path.join(save_dir, f"{report_name}{suffix}")
         os.makedirs(pbir_dir, exist_ok=True)
         
+        file_count = 0
         for part in parts:
             part_path = part.get("path")
             payload = part.get("payload", "")
@@ -51,9 +62,20 @@ def download_pbir(client: FabricClient, workspace_id, item_id, report_name, save
                 
                 with open(full_part_path, 'wb') as f:
                     f.write(file_content)
+                file_count += 1
                     
+        fmt = "TMDL" if item_type == "SemanticModel" else "PBIR"
         logger.info(f"Downloaded {item_type} structure into: {pbir_dir}")
-        return True, ""
+        return True, f"{fmt} definition extracted successfully ({file_count} file(s)) into folder '{os.path.basename(pbir_dir)}'."
     except Exception as e:
+        err = str(e)
+        if "401" in err or "403" in err:
+            reason = f"Access denied reading the {item_type} definition. You need 'Member' or 'Admin' rights on this workspace."
+        elif "empty definition" in err.lower():
+            reason = err
+        elif "No definition found" in err:
+            reason = "Fabric returned no definition. This item type does not expose a downloadable structure."
+        else:
+            reason = f"Structure ({item_type}) export failed: {err}"
         logger.error(f"Failed to download PBIR for {item_type} '{report_name}': {e}")
-        return False, f"PBIR structure failure: {str(e)}"
+        return False, reason

@@ -11,7 +11,7 @@
     <div class="title-bar">
         <div class="title-left">
             <span class="crosshair-icon">⨁</span>
-            <span>BI Artillery - Bulk Power BI Downloader/Uploader - v2.1.0</span>
+            <span>BI Artillery - Bulk Power BI Downloader/Uploader - v2.2.0</span>
         </div>
         <div class="title-right">
             <span class="window-control">-</span>
@@ -98,6 +98,66 @@
         <div class="status-right">
             <span class="creator">Power BI App</span>
             <span id="status-totals">0 Workspaces - 0 items</span>
+        </div>
+    </div>
+
+    <!-- Upload Configuration Modal -->
+    <div class="modal-overlay" id="upload-modal" style="display:none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>⤒ Upload Reports to Workspace</h3>
+                <span class="modal-close" id="upload-modal-close">×</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Target Workspace</label>
+                    <input type="text" id="upload-ws-name" readonly placeholder="Select a workspace first">
+                </div>
+
+                <div class="form-group">
+                    <label>Destination Folder <span class="hint">(where reports will be placed)</span></label>
+                    <select id="upload-folder-select">
+                        <option value="">📁 Workspace Root (no subfolder)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Rebind to Dataset <span class="hint">(optional — connect reports to an existing semantic model)</span></label>
+                    <select id="upload-dataset-select">
+                        <option value="">🔗 Keep dataset packaged inside PBIX (no rebind)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>PBIX Files to Upload</label>
+                    <div class="file-picker">
+                        <button class="btn btn-blue" id="btn-pick-files">📂 Choose PBIX Files…</button>
+                        <span id="upload-file-count" class="file-count">No files selected</span>
+                    </div>
+                    <ul class="file-list" id="upload-file-list"></ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-text" id="upload-cancel">Cancel</button>
+                <button class="btn btn-red" id="upload-start" disabled>⤒ Start Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Overlay (shared by Upload & Download) -->
+    <div class="modal-overlay" id="progress-overlay" style="display:none;">
+        <div class="progress-card">
+            <h3 id="progress-title">Processing…</h3>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill" style="width:0%;"></div>
+            </div>
+            <div class="progress-meta">
+                <span id="progress-count">0 / 0</span>
+                <span id="progress-percent">0%</span>
+            </div>
+            <div class="progress-current" id="progress-current">Starting…</div>
+            <ul class="progress-log" id="progress-log"></ul>
+            <button class="btn btn-blue" id="progress-done" style="display:none; width:100%; margin-top:15px;">Done — View Full Report</button>
         </div>
     </div>
 
