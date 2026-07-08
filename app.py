@@ -20,7 +20,8 @@ from bulk_uploader import get_or_create_folder
 
 app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
 
-TENANT_ID = "a3c75d30-dfe5-4bd3-9fae-5e9fcc0d0997"
+# Using "common" allows users from any organization to log in
+TENANT_ID = "organizations"
 client = None
 current_user = "Not Authenticated"
 

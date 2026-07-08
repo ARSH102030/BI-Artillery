@@ -27,7 +27,7 @@ def run():
     logger.info("=========================================")
     logger.info("Starting up Interactive Power BI Bulk Uploader...")
     
-    tenant_id = "a3c75d30-dfe5-4bd3-9fae-5e9fcc0d0997"
+    tenant_id = "organizations"
     
     try:
         # 1. Interactive Authentication
