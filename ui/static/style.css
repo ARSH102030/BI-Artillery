@@ -43,18 +43,23 @@ body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100
 .workspace-list li.active { background-color: #e1dfdd; border-left: 3px solid #0078d4; }
 
 /* Center Table Area */
-.table-area { flex: 1; display: flex; flex-direction: column; background-color: #fff; }
-.table-toolbar { display: flex; justify-content: space-between; padding: 10px 20px; border-bottom: 1px solid #e1dfdd; font-size: 13px; }
-.breadcrumbs { display: flex; align-items: center; gap: 5px; font-weight: 600; }
+.table-area { flex: 1; display: flex; flex-direction: column; background-color: #fff; overflow: hidden; min-width: 0; }
+.table-toolbar { display: flex; justify-content: space-between; padding: 10px 20px; border-bottom: 1px solid #e1dfdd; font-size: 13px; flex-shrink: 0; }
+.breadcrumbs { display: flex; align-items: center; gap: 5px; font-weight: 600; flex-wrap: wrap; }
 .fabric-icon { font-size: 16px; color: #0078d4; }
 .chevron { color: #a19f9d; }
 
+/* Scroll wrapper so long lists of reports/models are fully accessible */
+.table-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; }
+
 .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table thead th { position: sticky; top: 0; z-index: 2; background-color: #fff; }
 .data-table th { text-align: left; padding: 8px 15px; border-bottom: 2px solid #edebe9; color: #605e5c; font-weight: normal; }
 .data-table td { padding: 10px 15px; border-bottom: 1px solid #edebe9; vertical-align: middle; cursor: pointer; }
 .data-table tr:hover { background-color: #f3f2f1; }
 .text-right { text-align: right; }
 .col-check { width: 40px; }
+.empty-state { text-align: center; color: #8a8886; padding: 30px 15px !important; cursor: default; }
 
 .type-badge { border: 1px solid #0078d4; color: #0078d4; border-radius: 10px; padding: 2px 8px; font-size: 11px; display: inline-block; }
 
