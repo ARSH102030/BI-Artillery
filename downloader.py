@@ -1,5 +1,6 @@
 import os
 import base64
+import json
 from api_client import FabricClient
 from logger import logger
 
@@ -44,7 +45,7 @@ def download_pbir(client: FabricClient, workspace_id, item_id, report_name, save
             raise Exception(f"Microsoft Fabric returned an empty definition for this {item_type}. This usually occurs when the Semantic Model relies on features not yet supported by PBIR or TMDL export formats.")
 
         # We create a directory for the formatted item
-        suffix = ".Report" if item_type == "Report" else ".Dataset"
+        suffix = ".Report" if item_type == "Report" else ".SemanticModel"
         pbir_dir = os.path.join(save_dir, f"{report_name}{suffix}")
         os.makedirs(pbir_dir, exist_ok=True)
         
@@ -63,10 +64,23 @@ def download_pbir(client: FabricClient, workspace_id, item_id, report_name, save
                 with open(full_part_path, 'wb') as f:
                     f.write(file_content)
                 file_count += 1
-                    
+
+        # Generate a proper .pbip project pointer so the folder opens directly in Power BI Desktop
+        artifact_key = "report" if item_type == "Report" else "dataset"
+        pbip_content = {
+            "version": "1.0",
+            "artifacts": [
+                {artifact_key: {"path": f"{report_name}{suffix}"}}
+            ],
+            "settings": {"enableAutoRecovery": True}
+        }
+        pbip_path = os.path.join(save_dir, f"{report_name}.pbip")
+        with open(pbip_path, "w", encoding="utf-8") as f:
+            json.dump(pbip_content, f, indent=2)
+
         fmt = "TMDL" if item_type == "SemanticModel" else "PBIR"
         logger.info(f"Downloaded {item_type} structure into: {pbir_dir}")
-        return True, f"{fmt} definition extracted successfully ({file_count} file(s)) into folder '{os.path.basename(pbir_dir)}'."
+        return True, f"{fmt} definition extracted into '{os.path.basename(pbir_dir)}' ({file_count} file(s)) with an openable '{report_name}.pbip' project file."
     except Exception as e:
         err = str(e)
         if "401" in err or "403" in err:

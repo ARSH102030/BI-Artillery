@@ -139,26 +139,36 @@ def download():
 
 
 def _download_single_item(workspace_id, item, base_download_dir):
-    """Downloads a single item and returns a detailed summary dict."""
+    """Downloads a single item and returns a detailed summary dict.
+
+    Reports: default to PBIX (preferred). If PBIX export is not available
+    (e.g. modern PBIP/thin reports), automatically fall back to PBIP project format.
+    Semantic Models: downloaded as a PBIP semantic model (TMDL) definition.
+    """
     item_id = item["id"]
     safe_name = item["name"].replace("/", "").replace("\\", "")
     item_type = item.get("type", "Report")
 
     try:
-        if item_type == "Report":
-            pbir_success, pbir_reason = download_pbir(client, workspace_id, item_id, safe_name, base_download_dir, item_type=item_type)
-            pbix_success, pbix_reason = download_pbix(client, workspace_id, item_id, safe_name, base_download_dir)
+        # ---- Semantic Models ----
+        if item_type == "SemanticModel":
+            success, reason_str = download_pbir(client, workspace_id, item_id, safe_name, base_download_dir, item_type="SemanticModel")
+            status = "Success" if success else "Failed"
+            return {"name": safe_name, "type": "Semantic Model (PBIP)", "status": status, "reason": reason_str or "Completed."}
 
-            success = pbir_success and pbix_success
-            reasons = []
-            if pbir_reason: reasons.append(f"Structure: {pbir_reason}")
-            if pbix_reason: reasons.append(f"Binary: {pbix_reason}")
-            reason_str = "  |  ".join(reasons)
-        else:  # SemanticModel
-            success, reason_str = download_pbir(client, workspace_id, item_id, safe_name, base_download_dir, item_type=item_type)
+        # ---- Reports: PBIX first (default output format) ----
+        pbix_success, pbix_reason = download_pbix(client, workspace_id, item_id, safe_name, base_download_dir)
+        if pbix_success:
+            return {"name": safe_name, "type": "Report (PBIX)", "status": "Success", "reason": pbix_reason}
 
-        status = "Success" if success else ("Partial" if item_type == "Report" and ("successfully" in reason_str.lower()) else "Failed")
-        return {"name": safe_name, "type": item_type, "status": status, "reason": reason_str or "Completed."}
+        # ---- Fallback: PBIP project format when PBIX is unavailable ----
+        pbip_success, pbip_reason = download_pbir(client, workspace_id, item_id, safe_name, base_download_dir, item_type="Report")
+        if pbip_success:
+            return {"name": safe_name, "type": "Report (PBIP)", "status": "Success",
+                    "reason": f"This is a PBIP-format report, so PBIX export was not available — saved as a PBIP project instead. {pbip_reason}"}
+
+        return {"name": safe_name, "type": "Report", "status": "Failed",
+                "reason": f"Could not download in either format. PBIX attempt: {pbix_reason}  |  PBIP attempt: {pbip_reason}"}
     except Exception as e:
         print(f"Error downloading {safe_name}: {e}")
         return {"name": safe_name, "type": item_type, "status": "Failed", "reason": f"Unexpected error: {str(e)}"}
