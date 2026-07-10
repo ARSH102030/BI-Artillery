@@ -2,11 +2,18 @@ import requests
 import time
 from logger import logger
 
+# (connect timeout, read timeout) in seconds — prevents the app from hanging forever
+DEFAULT_TIMEOUT = (10, 60)
+EXPORT_TIMEOUT = (10, 300)   # PBIX export / upload can legitimately take longer
+
+
 class FabricClient:
     def __init__(self, access_token):
         self.access_token = access_token
         self.fabric_base_url = "https://api.fabric.microsoft.com/v1"
         self.pbi_base_url = "https://api.powerbi.com/v1.0/myorg"
+        # A pooled session keeps TCP connections warm -> much faster for many items
+        self.session = requests.Session()
 
     @property
     def headers(self):
@@ -16,7 +23,7 @@ class FabricClient:
         }
 
     def _get(self, url):
-        response = requests.get(url, headers=self.headers)
+        response = self.session.get(url, headers=self.headers, timeout=DEFAULT_TIMEOUT)
         response.raise_for_status()
         return response.json()
 
@@ -38,7 +45,7 @@ class FabricClient:
 
     def get_dataset_export(self, workspace_id, report_id):
         url = f"{self.pbi_base_url}/groups/{workspace_id}/reports/{report_id}/Export"
-        response = requests.get(url, headers=self.headers, stream=True)
+        response = self.session.get(url, headers=self.headers, timeout=EXPORT_TIMEOUT)
         response.raise_for_status()
         return response.content
 
@@ -50,7 +57,7 @@ class FabricClient:
         if format:
             params["format"] = format
 
-        response = requests.post(url, headers=self.headers, params=params)
+        response = self.session.post(url, headers=self.headers, params=params, timeout=DEFAULT_TIMEOUT)
 
         # Immediate success
         if response.status_code == 200:
@@ -59,13 +66,14 @@ class FabricClient:
         # Long-running operation
         if response.status_code == 202:
             op_url = response.headers.get("Location") or response.headers.get("Operation-Location")
-            retry_after = self._safe_int(response.headers.get("Retry-After"), 2)
+            # Cap the wait between polls to 1-5s so large Retry-After values don't stall the app
+            retry_after = min(max(self._safe_int(response.headers.get("Retry-After"), 2), 1), 5)
             if not op_url:
                 raise Exception("Fabric accepted the request but returned no operation URL to poll for the definition.")
 
-            for _ in range(90):  # poll up to a few minutes
+            for _ in range(40):  # ~ up to a couple of minutes max
                 time.sleep(retry_after)
-                op_resp = requests.get(op_url, headers=self.headers)
+                op_resp = self.session.get(op_url, headers=self.headers, timeout=DEFAULT_TIMEOUT)
                 op_resp.raise_for_status()
                 op_json = op_resp.json()
                 status = op_json.get("status", "")
@@ -73,7 +81,7 @@ class FabricClient:
                 if status == "Succeeded":
                     # Result may be delivered via a Location header or the conventional /result path
                     result_url = op_resp.headers.get("Location") or f"{op_url}/result"
-                    res_resp = requests.get(result_url, headers=self.headers)
+                    res_resp = self.session.get(result_url, headers=self.headers, timeout=EXPORT_TIMEOUT)
                     res_resp.raise_for_status()
                     res_json = res_resp.json()
                     return res_json.get("definition", res_json)
@@ -82,10 +90,10 @@ class FabricClient:
                     msg = err.get("message") or err.get("errorCode") or str(op_json)
                     logger.error(f"getDefinition operation failed: {op_json}")
                     raise Exception(f"Fabric could not export this item's definition: {msg}")
-                # NotStarted / Running -> keep polling, honour any updated Retry-After
-                retry_after = self._safe_int(op_resp.headers.get("Retry-After"), retry_after)
+                # NotStarted / Running -> keep polling, honour any updated Retry-After (capped)
+                retry_after = min(max(self._safe_int(op_resp.headers.get("Retry-After"), retry_after), 1), 5)
 
-            raise Exception("Timed out waiting for Fabric to prepare the item definition (still running after several minutes).")
+            raise Exception("Timed out waiting for Fabric to prepare the item definition (still running after a couple of minutes).")
 
         # Any other status code -> surface the real error message
         detail = self._extract_error(response)
@@ -113,7 +121,7 @@ class FabricClient:
         if parent_folder_id:
             payload["parentFolderId"] = parent_folder_id
         
-        response = requests.post(url, headers=self.headers, json=payload)
+        response = self.session.post(url, headers=self.headers, json=payload, timeout=DEFAULT_TIMEOUT)
         response.raise_for_status()
         return response.json()
 
@@ -137,14 +145,14 @@ class FabricClient:
             files = {
                 "value": (report_name + ".pbix", f, "application/octet-stream")
             }
-            response = requests.post(url, headers=headers, files=files)
+            response = self.session.post(url, headers=headers, files=files, timeout=EXPORT_TIMEOUT)
             response.raise_for_status()
             
             import_info = response.json()
             import_id = import_info.get("id")
 
-            # Polling for import completion
-            while True:
+            # Polling for import completion (capped so it can't hang forever)
+            for _ in range(150):
                 time.sleep(2)
                 status_res = self.get_import(workspace_id, import_id)
                 state = status_res.get("importState")
@@ -154,11 +162,12 @@ class FabricClient:
                     raise Exception(f"Import Failed: {status_res}")
                 elif state in ["Publishing", "Importing"]:
                     continue
+            raise Exception("Import timed out: Power BI is still processing the file after several minutes.")
 
     def rebind_report(self, workspace_id, report_id, dataset_id):
         url = f"{self.pbi_base_url}/groups/{workspace_id}/reports/{report_id}/Rebind"
         payload = {"datasetId": dataset_id}
-        response = requests.post(url, headers=self.headers, json=payload)
+        response = self.session.post(url, headers=self.headers, json=payload, timeout=DEFAULT_TIMEOUT)
         response.raise_for_status()
         return response
 
@@ -171,12 +180,12 @@ class FabricClient:
             },
             "sourceType": "ExistingReport"
         }
-        response = requests.post(url, headers=self.headers, json=payload)
+        response = self.session.post(url, headers=self.headers, json=payload, timeout=DEFAULT_TIMEOUT)
         response.raise_for_status()
         return response
 
     def delete_report(self, workspace_id, report_id):
         url = f"{self.pbi_base_url}/groups/{workspace_id}/reports/{report_id}"
-        response = requests.delete(url, headers=self.headers)
+        response = self.session.delete(url, headers=self.headers, timeout=DEFAULT_TIMEOUT)
         response.raise_for_status()
         return response
