@@ -11,7 +11,7 @@
     <div class="title-bar">
         <div class="title-left">
             <span class="crosshair-icon">⨁</span>
-            <span>BI Artillery - Bulk Power BI Downloader/Uploader - v2.2.0</span>
+            <span>BI Artillery - Bulk Power BI Downloader/Uploader - v2.3.0</span>
         </div>
         <div class="title-right">
             <span class="window-control">-</span>
@@ -46,7 +46,7 @@
         <div class="sidebar">
             <div class="sidebar-header">FABRIC WORKSPACES</div>
             <div class="search-box">
-                <input type="text" placeholder="⌕ Filter workspaces...">
+                <input type="text" id="workspace-filter" placeholder="⌕ Filter workspaces...">
             </div>
             <ul class="workspace-list" id="workspace-list">
                 <!-- Populated via JS -->
@@ -58,6 +58,9 @@
             <div class="table-toolbar">
                 <div class="breadcrumbs" id="breadcrumbs">
                     <span class="fabric-icon">🗂</span> Fabric <span class="chevron">></span> <span id="current-ws-lbl">Select a Workspace</span>
+                </div>
+                <div class="table-filter">
+                    <input type="text" id="report-filter" placeholder="⌕ Filter items in this workspace...">
                 </div>
             </div>
 
@@ -159,6 +162,7 @@
                 <span id="progress-percent">0%</span>
             </div>
             <div class="progress-current" id="progress-current">Starting…</div>
+            <div class="progress-stats" id="progress-stats" style="display:none;"></div>
             <ul class="progress-log" id="progress-log"></ul>
             <button class="btn btn-blue" id="progress-done" style="display:none; width:100%; margin-top:15px;">Done — View Full Report</button>
         </div>

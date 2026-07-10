@@ -49,6 +49,10 @@ body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100
 .fabric-icon { font-size: 16px; color: #0078d4; }
 .chevron { color: #a19f9d; }
 
+/* Filter box in the table toolbar */
+.table-filter input { border: 1px solid #c8c6c4; border-radius: 6px; padding: 6px 10px; font-size: 12px; width: 240px; background: #faf9f8; }
+.table-filter input:focus { outline: none; border-color: #0078d4; box-shadow: 0 0 0 3px rgba(0,120,212,0.15); }
+
 /* Scroll wrapper so long lists of reports/models are fully accessible */
 .table-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; }
 
@@ -112,6 +116,11 @@ body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100
 .progress-fill.upload { background: linear-gradient(90deg, #d13438, #ff4b4b); box-shadow: 0 0 12px rgba(255,75,75,0.7); }
 .progress-meta { display: flex; justify-content: space-between; margin-top: 10px; font-size: 13px; color: #c5c6c7; font-weight: 600; }
 .progress-current { margin-top: 12px; font-size: 12px; color: #00f3ff; text-align: center; min-height: 16px; }
+.progress-stats { margin-top: 12px; display: flex; gap: 10px; justify-content: center; font-size: 12px; font-weight: 700; }
+.progress-stats .stat { padding: 4px 12px; border-radius: 12px; }
+.progress-stats .stat-ok { background: rgba(69,255,69,0.12); color: #45ff45; border: 1px solid rgba(69,255,69,0.4); }
+.progress-stats .stat-partial { background: rgba(255,185,0,0.12); color: #ffb900; border: 1px solid rgba(255,185,0,0.4); }
+.progress-stats .stat-fail { background: rgba(255,0,85,0.12); color: #ff0055; border: 1px solid rgba(255,0,85,0.4); }
 .progress-log { list-style: none; margin: 16px 0 0; padding: 0; max-height: 180px; overflow-y: auto; font-size: 12px; }
 .progress-log li { padding: 6px 8px; border-bottom: 1px solid #1f2833; color: #c5c6c7; display: flex; gap: 8px; align-items: flex-start; }
 .progress-log li .plog-status { flex-shrink: 0; font-weight: 700; }

@@ -28,12 +28,32 @@ def download_pbix(client: FabricClient, workspace_id, report_id, report_name, sa
 
 def download_pbir(client: FabricClient, workspace_id, item_id, report_name, save_dir, item_type="Report"):
     try:
-        req_format = "TMDL" if item_type == "SemanticModel" else None
-        definition = client.get_item_definition(workspace_id, item_id, format=req_format)
-        print(f"DEBUG: Retrieved definition for {report_name} ({item_type}): {definition}")
+        # Try a sequence of export formats for resilience. Fabric supports different
+        # formats depending on the item and how it was last published.
+        if item_type == "SemanticModel":
+            formats_to_try = ["TMDL", None, "TMSL"]
+        else:  # Report
+            formats_to_try = [None, "PBIR", "PBIR-Legacy"]
+
+        definition = None
+        last_err = None
+        for fmt in formats_to_try:
+            try:
+                definition = client.get_item_definition(workspace_id, item_id, format=fmt)
+                if definition:
+                    # Verify it actually contains parts before accepting it
+                    _parts = definition.get("parts", []) or definition.get("definition", {}).get("parts", [])
+                    if _parts:
+                        break
+            except Exception as fe:
+                last_err = fe
+                continue
+
         if not definition:
+            if last_err:
+                raise last_err
             logger.warning(f"No definition found for {item_type} '{report_name}'.")
-            return False, "No definition found in Fabric API response."
+            return False, "Fabric returned no definition for this item in any supported format."
 
         # PBIR definition consists of base64 decoded files
         # It could be named "definition" or "parts" inside depending on where we unpacked it
@@ -42,7 +62,7 @@ def download_pbir(client: FabricClient, workspace_id, item_id, report_name, save
             parts = definition["definition"].get("parts", [])
             
         if not parts:
-            raise Exception(f"Microsoft Fabric returned an empty definition for this {item_type}. This usually occurs when the Semantic Model relies on features not yet supported by PBIR or TMDL export formats.")
+            raise Exception(f"Microsoft Fabric returned an empty definition for this {item_type}. This usually occurs when the item relies on features not yet supported by PBIR/TMDL export formats.")
 
         # We create a directory for the formatted item
         suffix = ".Report" if item_type == "Report" else ".SemanticModel"

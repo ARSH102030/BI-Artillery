@@ -44,42 +44,68 @@ class FabricClient:
 
     def get_item_definition(self, workspace_id, item_id, format=None):
         url = f"{self.fabric_base_url}/workspaces/{workspace_id}/items/{item_id}/getDefinition"
-        
-        payload = {}
+
+        # Fabric expects `format` as a QUERY parameter (not a JSON body).
+        params = {}
         if format:
-            payload["format"] = format
-            
-        response = requests.post(url, headers=self.headers, json=payload if payload else None)
+            params["format"] = format
+
+        response = requests.post(url, headers=self.headers, params=params)
+
+        # Immediate success
+        if response.status_code == 200:
+            return response.json().get("definition", {})
+
+        # Long-running operation
         if response.status_code == 202:
-            # Long-running operation handling
-            operation_id = response.headers.get("Location") or response.headers.get("Operation-Location")
-            if not operation_id:
-                raise Exception("No operation location returned for long running task.")
-            
-            # Polling
-            while True:
-                time.sleep(2)
-                op_response = requests.get(operation_id, headers=self.headers)
-                op_response.raise_for_status()
-                op_json = op_response.json()
-                
-                # Check Fabric API status
+            op_url = response.headers.get("Location") or response.headers.get("Operation-Location")
+            retry_after = self._safe_int(response.headers.get("Retry-After"), 2)
+            if not op_url:
+                raise Exception("Fabric accepted the request but returned no operation URL to poll for the definition.")
+
+            for _ in range(90):  # poll up to a few minutes
+                time.sleep(retry_after)
+                op_resp = requests.get(op_url, headers=self.headers)
+                op_resp.raise_for_status()
+                op_json = op_resp.json()
                 status = op_json.get("status", "")
+
                 if status == "Succeeded":
-                    # Get the result from {operation_id}/result
-                    result_url = f"{operation_id}/result"
+                    # Result may be delivered via a Location header or the conventional /result path
+                    result_url = op_resp.headers.get("Location") or f"{op_url}/result"
                     res_resp = requests.get(result_url, headers=self.headers)
                     res_resp.raise_for_status()
                     res_json = res_resp.json()
                     return res_json.get("definition", res_json)
                 elif status == "Failed":
-                    logger.error(f"getDefinition operation failed: {op_json.get('error')}")
-                    raise Exception("getDefinition Failed")
-                elif status in ["NotStarted", "Running"]:
-                    continue
-        else:
-            response.raise_for_status()
-            return response.json().get("definition", {})
+                    err = op_json.get("error", {}) or {}
+                    msg = err.get("message") or err.get("errorCode") or str(op_json)
+                    logger.error(f"getDefinition operation failed: {op_json}")
+                    raise Exception(f"Fabric could not export this item's definition: {msg}")
+                # NotStarted / Running -> keep polling, honour any updated Retry-After
+                retry_after = self._safe_int(op_resp.headers.get("Retry-After"), retry_after)
+
+            raise Exception("Timed out waiting for Fabric to prepare the item definition (still running after several minutes).")
+
+        # Any other status code -> surface the real error message
+        detail = self._extract_error(response)
+        raise Exception(f"getDefinition returned HTTP {response.status_code}: {detail}")
+
+    @staticmethod
+    def _safe_int(value, default):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+
+    @staticmethod
+    def _extract_error(response):
+        try:
+            err_json = response.json()
+            err = err_json.get("error", err_json)
+            return err.get("message") or err.get("errorCode") or str(err_json)
+        except Exception:
+            return response.text or "No additional detail returned."
 
     def create_folder(self, workspace_id, folder_name, parent_folder_id=None):
         url = f"{self.fabric_base_url}/workspaces/{workspace_id}/folders"

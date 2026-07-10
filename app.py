@@ -275,5 +275,5 @@ if __name__ == "__main__":
     t.daemon = True
     t.start()
     
-    webview.create_window("BI Artillery - Bulk Power BI Downloader/Uploader - v2.2.0", "http://localhost:5000", width=1200, height=800)
+    webview.create_window("BI Artillery - Bulk Power BI Downloader/Uploader - v2.3.0", "http://localhost:5000", width=1200, height=800)
     webview.start()

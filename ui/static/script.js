@@ -305,6 +305,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Workspace filter (sidebar) ---
+    const workspaceFilter = document.getElementById('workspace-filter');
+    if (workspaceFilter) {
+        workspaceFilter.addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            document.querySelectorAll('.workspace-list li').forEach(li => {
+                li.style.display = li.textContent.toLowerCase().includes(q) ? '' : 'none';
+            });
+        });
+    }
+
+    // --- Report/item filter (center table) ---
+    const reportFilter = document.getElementById('report-filter');
+    if (reportFilter) {
+        reportFilter.addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            document.querySelectorAll('#table-body tr').forEach(tr => {
+                if (tr.querySelector('.empty-state')) return;
+                tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+            });
+        });
+    }
+
     function showDetails(report) {
         detailsPane.style.display = 'flex';
         detailsContent.innerHTML = `
@@ -384,6 +407,8 @@ document.addEventListener('DOMContentLoaded', () => {
         progressCurrent.textContent = 'Starting…';
         progressLog.innerHTML = '';
         progressDone.style.display = 'none';
+        const ps = document.getElementById('progress-stats');
+        if (ps) { ps.style.display = 'none'; ps.innerHTML = ''; }
         progressOverlay.style.display = 'flex';
     }
 
@@ -402,6 +427,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span><strong>${result.name}</strong><br><span style="color:#8a8886;">${result.reason || ''}</span></span>`;
         progressLog.appendChild(li);
         progressLog.scrollTop = progressLog.scrollHeight;
+    }
+
+    const progressStats = document.getElementById('progress-stats');
+    function showProgressStats(summary) {
+        const ok = summary.filter(s => s.status === 'Success').length;
+        const partial = summary.filter(s => s.status === 'Partial').length;
+        const fail = summary.filter(s => s.status === 'Failed').length;
+        let html = `<span class="stat stat-ok">✓ ${ok} Succeeded</span>`;
+        if (partial > 0) html += `<span class="stat stat-partial">◐ ${partial} Partial</span>`;
+        if (fail > 0) html += `<span class="stat stat-fail">✕ ${fail} Failed</span>`;
+        progressStats.innerHTML = html;
+        progressStats.style.display = 'flex';
     }
 
     progressDone.addEventListener('click', () => {
@@ -447,6 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         progressCurrent.textContent = 'All downloads complete.';
         window._lastSummary = summary;
+        showProgressStats(summary);
         progressDone.dataset.kind = 'Download';
         progressDone.style.display = 'block';
         checkSelection();
@@ -560,6 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         progressCurrent.textContent = 'All uploads complete.';
         window._lastSummary = summary;
+        showProgressStats(summary);
         progressDone.dataset.kind = 'Upload';
         progressDone.style.display = 'block';
 
