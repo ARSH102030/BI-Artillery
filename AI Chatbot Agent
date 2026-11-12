@@ -1,0 +1,241 @@
+Act as a senior Power BI custom-visual developer and full-stack engineer.
+Build a complete, working analytics assistant inside Power BI Desktop,
+from prerequisite checks and dependency installation to packaged visuals.
+
+USER SETTINGS
+- Project directory: [FULL PROJECT PATH]
+- PBIP directory: [FULL PBIP FOLDER PATH]
+- Exact Desktop report name: [REPORT NAME]
+- Assistant display name: [ASSISTANT NAME]
+- Business domain: [RETAIL / FINANCE / OPERATIONS / OTHER]
+- Accent color: [HEX COLOR, e.g. #8e7cfe]
+- Versions required: [LOCAL ONLY / COPILOT AI / BOTH]
+- Preferred Copilot model: [AUTO / AVAILABLE MODEL NAME]
+- Permit Copilot cloud processing: [YES / NO]
+- Enable background startup at Windows sign-in: [YES / NO]
+- Publisher name: [NAME]
+- Publisher email: [EMAIL]
+- Support URL: [URL]
+
+WORKING RULES
+Implement the project, not merely a plan or mockup.
+Inspect the workspace, report definitions and installed tools first.
+Preserve unrelated files and never modify the semantic model without approval.
+Reuse suitable existing code and dependencies.
+Ask only for genuinely blocking information or required installation consent.
+Never request, display or store credentials in chat, source files or reports.
+Do not claim success until the relevant checks have actually passed.
+Use synthetic fixtures only for explicitly labelled tests.
+
+PREREQUISITES AND INSTALLATION
+Check Windows, Power BI Desktop, a supported Node.js LTS version, npm,
+Python, a project virtual environment, ADOMD.NET/model-access dependencies,
+Power BI visual tooling and browser-test tooling.
+Install missing project dependencies and generate dependency lockfiles.
+Before system-wide changes, explain what will be installed and obtain
+required approval. Never bypass organizational restrictions or elevation.
+Use the actual selected Python interpreter, not an assumed PATH executable.
+Provide repeatable install, build, start, stop and diagnostic commands.
+
+ARCHITECTURE
+Create:
+1. A TypeScript Power BI custom visual, distributed as .pbiviz.
+2. A local Python companion that queries the open Desktop semantic model.
+3. Automated tests and documentation.
+
+If BOTH versions are requested, create distinct visual GUIDs, package names
+and localhost ports. Keep the local-only version independent of AI calls.
+Share suitable UI and chart code without mixing their data-routing behavior.
+
+Use maintained libraries such as Chart.js and Lucide.
+Query the Power BI semantic model, not the original Excel/database directly,
+so existing measures and relationships determine results.
+
+MODEL CONNECTION
+Discover the currently open report by its exact name and resolve its
+current Analysis Services port and catalog. Do not hardcode session ports
+or silently select a different report.
+Handle report reopening, unavailable models and ambiguous matches clearly.
+Read visible measures, columns, types, descriptions, format strings and
+relevant relationships. Avoid exposing unnecessary connection details.
+Execute read-only DAX with bounded timeouts and result sizes.
+
+LOCAL-ONLY VERSION
+Require no AI model, provider API key or outbound AI requests.
+Support schema-driven query-builder controls and documented exact-name
+question patterns.
+Reject ambiguous or unsupported requests rather than guessing.
+Return charts, data and the exact executed DAX.
+
+COPILOT AI VERSION
+Build this only when cloud processing is authorized.
+Use the official standalone GitHub Copilot CLI and its own authenticated
+account. Do not extract VS Code credentials or reuse the current chat.
+Verify authentication with a harmless prompt containing no report data.
+Guide the user through official login when needed.
+Use an available model or automatic selection; do not invent model IDs.
+No separate provider API key should be necessary.
+
+Inspect the installed CLI’s current flags. Use structured JSON output,
+disable custom instructions and MCP servers, and explicitly restrict tools.
+Verify zero available tools before sending report information.
+Do not assume that a value-less tool flag disables tools.
+Run in an isolated working directory and suppress child console windows.
+Document Copilot usage limits and possible CLI/cloud session retention.
+
+BOUNDED AI WORKFLOW
+- Interpret the question using verified schema and limited conversation history.
+- Generate a structured plan, not arbitrary executable DAX or code.
+- Validate every measure, column, filter and operation.
+- Construct DAX locally from approved templates.
+- Execute locally with limits.
+- Allow at most one repair attempt.
+- Ask for clarification if the request cannot be represented correctly.
+- Never silently discard requested conditions.
+- Explain results using bounded, explicitly disclosed evidence.
+- Preserve valid query results if AI explanation fails.
+
+Do not enable shell execution, file editing, web browsing or autonomous
+model modifications through the chatbot.
+
+SECURITY AND BACKGROUND OPERATION
+Bind companions only to loopback addresses.
+Protect schema/query routes with expiring, unpredictable session tokens.
+Use a native Windows approval dialog with a verification code matching
+the visual. No typed pairing passphrase should be necessary.
+Do not trust a null browser origin as proof of identity.
+Validate hosts, origins, request sizes, payloads and allowed operations.
+
+If authorized, install per-user background startup without administrator
+privileges. Supervise exited services, prevent duplicate instances and
+use bounded restart intervals and rotating operational logs.
+Do not log secrets, prompts or result data by default.
+Use windowless Python and suppress PowerShell/Copilot child console windows.
+Keep intentional approval dialogs visible.
+Provide disable/uninstall instructions.
+Explain that startup does not eliminate session approval, authentication
+requirements or model availability constraints.
+
+WELCOME SCREEN
+Create a polished welcome message appropriate to the business domain.
+Show six clickable starter questions grounded in the actual model.
+Include a meeting-summary starter and five useful chart questions.
+Do not hardcode retail fields or assume unsupported metrics.
+Validate the starters against live data before declaring them ready.
+Choose compatible initial chart types for each starter.
+
+MEETING SUMMARY
+Support requests such as “Give me a complete report summary for the meeting.”
+
+Generate a multi-panel briefing, not a single chart or text paragraph.
+Select approximately six useful analytical views from verified metadata,
+business context and available comparison measures.
+Possible sections include:
+- Executive KPIs
+- Time trends and valid prior-period comparisons
+- Category/product contribution
+- Store/region/team contribution
+- Channel/customer segmentation
+- Margin, efficiency, retention or another available business measure
+
+Do not fabricate missing measures, targets or benchmarks.
+Each panel must include:
+- A descriptive title
+- An appropriate chart
+- A concise observation based on its executed results
+- Data and executed-DAX tabs
+- Relevant coverage or truncation notes
+
+Include an executive narrative, measured improvements, measured declines,
+suggested investigations and coverage gaps.
+Calculate numerical findings deterministically where practical.
+Distinguish contribution from performance against a target.
+Do not invent causal explanations or assume that lower values are worse.
+Check comparison definitions, zero denominators, missing values and
+partial periods. If evidence is insufficient, say so.
+Preserve successful sections when another fails and mark partial coverage.
+
+Clearly distinguish a configured semantic-model briefing from an exhaustive
+review of every report page. Explicitly support or reject requested summary
+filters; never silently ignore them.
+In AI mode, send only bounded, authorized evidence for narrative generation.
+
+UI AND CHARTS
+Use a refined, light, business-focused interface inspired by conversational
+analytics products, without copying proprietary branding.
+Apply the configured accent color with readable contrast and restrained
+supporting colors.
+
+Include:
+- Welcome message and six starter questions
+- Conversation history and new-conversation control
+- Connection status and matching-code approval
+- Guided query builder with measure, optional second measure,
+  grouping and typed equality filters
+- Loading, cancellation, clarification and recovery states
+- Chart, Data and DAX tabs
+- Copyable DAX
+- Clear cloud-processing and filter-scope notices
+
+Support bar, horizontal bar, line, area, donut, scatter and KPI views.
+Offer only compatible chart types:
+- Donuts require a suitable complete, non-negative part-to-whole series.
+- Scatter requires two numeric measures and must handle missing pairs.
+- KPI cards require meaningful aggregate values.
+- Time charts must use a valid chronological ordering.
+Respect model number/currency/percentage formats rather than guessing.
+Do not misrepresent the first N rows as a top-N ranking.
+Changing chart type must not change the underlying returned result.
+
+Charts remain inside the custom visual; do not describe them as separately
+created native Power BI report visuals.
+
+Ensure responsive layouts, stable chart dimensions, accessible labels,
+keyboard operation, visible focus, readable long labels, clear empty states
+and reduced-motion support. Avoid overlapping text or nested decorative cards.
+
+TRANSPARENCY
+Do not promise perfect accuracy or unrestricted natural-language support.
+Do not claim that report slicers automatically affect backend queries.
+Either implement verified filter propagation or display the limitation.
+Do not equate Desktop author access with Power BI Service-user RLS.
+Explain which components run locally and which use the cloud.
+Do not label the solution production-ready merely because it packages.
+
+VERIFICATION
+Add focused tests for:
+- Schema and plan validation
+- Unsupported-operation rejection
+- Query repair limits
+- Authorization and token expiry
+- Background restart and duplicate prevention
+- Hidden subprocess execution
+- Summary calculations, missing sections and narrative failures
+
+Use Playwright to verify both wide and narrow layouts, all compatible
+chart modes, nonblank chart canvases, welcome starters, multi-panel briefs,
+Data/DAX tabs and error states. Inspect screenshots.
+
+Test every starter and at least one complete briefing against the live model.
+Compare selected results with direct local DAX queries.
+Separate mocked browser tests from live integration evidence.
+Check dependency advisories and report unresolved production risks.
+If Desktop host interaction requires the user, provide exact steps and
+leave that requirement explicitly unverified.
+
+FINAL DELIVERY
+Provide:
+- Complete source code and dependency lockfiles
+- Repeatable installation and Windows startup scripts
+- Versioned .pbiviz packages
+- Local preview URL(s)
+- Exact Power BI import and connection instructions
+- README covering architecture, permissions, cloud data handling,
+  supported questions, summary scope, limits and troubleshooting
+- Test results distinguishing passed, failed and unverified checks
+- A short video-demo checklist using validated questions
+
+Implement and verify until complete or genuinely blocked.
+When blocked, identify the precise cause and the smallest necessary user
+action. Never substitute a mockup for a working integration without clearly
+labelling it.
